@@ -1,0 +1,23 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: market-gateway
+  
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+logging:
+  level:
+    root: INFO
+    com.cryptoplatform: DEBUG
+    
+kraken:
+  ws:
+    url: "wss://ws.kraken.com/v2"
+    symbols: 
+      - "BTC/USD"
+      - "ETH/USD"

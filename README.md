@@ -24,6 +24,11 @@ The system consists of three main components:
         *   **REST**: Query latest prices on demand.
         *   **WebSocket**: Subscribe for real-time updates.
 
+4.  **Redis Stream Schema** (`stream:market_ticks`)
+    *   **Key**: `stream:market_ticks`
+    *   **Values**: `symbol`, `ts`, `bid`, `ask`, `last`, `volume24h`, `change24h`.
+    *   **Consumer Group**: `api-ws` (Logic), `api-ws-{uuid}` (Instance broadcast).
+
 ---
 
 ## Service Layout

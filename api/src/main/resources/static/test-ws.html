@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Price Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        #logs { max-height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #f9f9f9; }
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #eee; }
+        .tick { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h2>WebSocket Live Prices</h2>
+    <div id="status">Connecting...</div>
+    <div id="logs"></div>
+
+    <script>
+        const ws = new WebSocket("ws://localhost:8080/ws/prices");
+        const logsDiv = document.getElementById("logs");
+        const statusDiv = document.getElementById("status");
+
+        function log(message, type = '') {
+            const el = document.createElement("div");
+            el.className = "log-entry " + type;
+            el.innerText = new Date().toISOString() + " - " + message;
+            logsDiv.prepend(el);
+        }
+
+        ws.onopen = function() {
+            statusDiv.innerText = "Connected";
+            log("Connected to WebSocket");
+            
+            // Subscribe
+            const subscribeMsg = {
+                type: "subscribe",
+                symbols: ["BTC-USD", "ETH-USD"]
+            };
+            ws.send(JSON.stringify(subscribeMsg));
+            log("Sent subscription: " + JSON.stringify(subscribeMsg));
+        };
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === "tick") {
+                log("TICK: " + data.symbol + " | Last: " + data.last + " | TS: " + data.ts, "tick");
+            } else {
+                log("MSG: " + JSON.stringify(data));
+            }
+        };
+
+        ws.onclose = function() {
+            statusDiv.innerText = "Disconnected";
+            log("Disconnected", "error");
+        };
+
+        ws.onerror = function(error) {
+            log("Error check console", "error");
+            console.error(error);
+        };
+    </script>
+</body>
+</html>
