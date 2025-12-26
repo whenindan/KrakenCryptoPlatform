@@ -89,7 +89,7 @@ The system consists of three main components:
 | :--- | :--- | :--- |
 | **Api REST** | `8080` | `http://localhost:8080` |
 | **Api WebSocket** | `8080` | `ws://localhost:8080/ws/prices` |
-| **Test Page** | `8080` | `http://localhost:8080/test-ws.html` |
+| **Dashboard** | `8080` | `http://localhost:8080/index.html` |
 | **Market Gateway** | `8081` | `http://localhost:8081/health` |
 | **Redis** | `6379` | `localhost:6379` (via tool or CLI) |
 | **Postgres** | `5432` | `localhost:5432` |
