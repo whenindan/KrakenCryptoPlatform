@@ -82,6 +82,26 @@ The system consists of three main components:
     { "type": "tick", "symbol": "BTC-USD", "last": 95000.0, "ts": 1700000000 }
     ```
 
+### Authentication
+*   **Sign Up**:
+    ```bash
+    curl -X POST http://localhost:8080/auth/signup \
+      -H "Content-Type: application/json" \
+      -d '{"email":"user@test.com", "password":"password"}'
+    ```
+*   **Log In**:
+    ```bash
+    curl -X POST http://localhost:8080/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"email":"user@test.com", "password":"password"}'
+    ```
+    *Returns: `{"token": "eyJhbG..."}`*
+*   **Get Balance**:
+    ```bash
+    curl http://localhost:8080/account/balance \
+      -H "Authorization: Bearer <YOUR_TOKEN>"
+    ```
+
 ## Debugging & Inspection
 
 ### 1. Service Ports

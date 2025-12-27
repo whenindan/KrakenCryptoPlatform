@@ -1,6 +1,7 @@
 package com.cryptoplatform.api.config;
 
 import com.cryptoplatform.api.redis.TickerStreamListener;
+import com.cryptoplatform.api.redis.TradeEngineListener;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -68,6 +69,46 @@ public class RedisConfig implements DisposableBean {
                 streamListener);
 
         listenerContainer.start();
+        return subscription;
+    }
+
+    @Bean
+    public Subscription tradeEngineSubscription(RedisConnectionFactory connectionFactory, 
+                                                TradeEngineListener tradeEngineListener,
+                                                StringRedisTemplate redisTemplate) { // Inject template to create group
+        
+        // This listener SHOULD be load balanced across instances if we scale up.
+        // So we use a shared group "api-trade-engine".
+        
+        String streamKey = "stream:market_ticks";
+        String group = "api-trade-engine";
+        
+        try {
+            redisTemplate.opsForStream().createGroup(streamKey, group);
+        } catch (Exception e) {
+            // Group exists
+        }
+
+        StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
+                StreamMessageListenerContainer.StreamMessageListenerContainerOptions.builder()
+                        .pollTimeout(Duration.ofMillis(100))
+                        .build();
+
+        // Note: reusing the same listenerContainer bean if possible, or creating new one?
+        // Ideally we should reuse one container for all subscriptions. 
+        // But `listenerContainer` field above is created inside `subscription()` method which is a @Bean.
+        // Let's refactor to make container a separate Bean or just create a new one here.
+        // Creating a second container is fine for now to avoid breaking existing code structure too much.
+        
+        StreamMessageListenerContainer<String, MapRecord<String, String, String>> container =
+                StreamMessageListenerContainer.create(connectionFactory, options);
+
+        Subscription subscription = container.receive(
+                Consumer.from(group, "consumer-" + UUID.randomUUID()), // Unique consumer name to avoid clashes within group? No, consumer name must be unique per thread/connection usually.
+                StreamOffset.create(streamKey, ReadOffset.lastConsumed()),
+                tradeEngineListener);
+
+        container.start();
         return subscription;
     }
 

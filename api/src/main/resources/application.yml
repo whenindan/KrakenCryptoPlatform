@@ -7,10 +7,19 @@ spring:
   
   # Placeholders for Postgres
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/mydb}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASS:postgres}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cryptodb}
+    username: ${DB_USER:crypto_user}
+    password: ${DB_PASS:crypto_pass}
     driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
 
   # Placeholders for Redis
   data:

@@ -7,41 +7,119 @@
     <title>CryptoPlatform Live</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- Ionicons for icons -->
+    <!-- Ionicons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
 
 <body>
     <div class="background-glow"></div>
+    <div class="grid-overlay"></div>
 
     <div class="container">
         <header>
             <div class="logo">
-                <ion-icon name="prism-outline" class="logo-icon"></ion-icon>
+                <ion-icon name="prism" class="logo-icon"></ion-icon>
                 <h1>CryptoPlatform</h1>
             </div>
-            <div class="status-indicator">
-                <span class="status-dot" id="connection-dot"></span>
-                <span id="connection-status">Connecting...</span>
+
+            <div class="header-right">
+                <div id="auth-section">
+                    <input type="email" id="email" placeholder="Email" class="auth-input">
+                    <input type="password" id="password" placeholder="Password" class="auth-input">
+                    <button id="login-btn" class="btn">Log In</button>
+                    <button id="signup-btn" class="btn secondary">Sign Up</button>
+                </div>
+
+                <div id="user-section" style="display: none; display: flex; align-items: center;">
+                    <span class="balance-display">$<span id="balance">0.00</span></span>
+                    <button id="logout-btn" class="btn secondary">Log Out</button>
+                </div>
+
+                <div class="status-indicator">
+                    <!-- Status Logic managed by app.js (dot color) -->
+                    <ion-icon name="wifi" id="connection-icon" style="color: var(--text-secondary);"></ion-icon>
+                </div>
             </div>
         </header>
 
         <main>
-            <section class="markets-grid" id="markets-container">
-                <!-- Ticker Cards will be injected here -->
-                <div class="loading-state">Loading Markets...</div>
+            <!-- LEFT: Trading Panel -->
+            <section class="panel">
+                <div class="panel-header">
+                    <ion-icon name="flash"></ion-icon> Trade <span id="selected-symbol">BTC-USD</span>
+                </div>
+                <div class="panel-content">
+                    <div class="trade-form">
+                        <div class="trade-tabs">
+                            <div class="tab buy active" id="tab-buy">Buy</div>
+                            <div class="tab sell" id="tab-sell">Sell</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Order Type</label>
+                            <div class="trade-tabs">
+                                <div class="tab active" id="type-market">Market</div>
+                                <div class="tab" id="type-limit">Limit</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="limit-price-group" style="display: none;">
+                            <label>Limit Price</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="trade-price" placeholder="Price">
+                                <span class="suffix">USD</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="trade-quantity" placeholder="0.00">
+                                <span class="suffix" id="trade-qty-suffix">BTC</span>
+                            </div>
+                        </div>
+
+                        <button id="place-order-btn" class="btn trade-btn buy">Buy BTC</button>
+                    </div>
+                </div>
+                <div class="terminal" id="logs-container">
+                    <div class="log-line"><span>System:</span> Ready to trade.</div>
+                </div>
             </section>
 
-            <section class="live-feed-section">
-                <div class="section-header">
-                    <h2><ion-icon name="pulse-outline"></ion-icon> Live Feed</h2>
-                    <button class="clear-btn" id="clear-logs">Clear</button>
+            <!-- CENTER: Markets -->
+            <section class="panel" style="background: transparent; border: none; box-shadow: none;">
+                <div class="market-list" id="markets-container">
+                    <!-- Cards injected here -->
+                    <div class="loading-state">Loading Markets...</div>
                 </div>
-                <div class="terminal-window" id="logs-container">
-                    <!-- Logs injected here -->
+            </section>
+
+            <!-- RIGHT: Portfolio & History -->
+            <section class="panel">
+                <div class="panel-header">
+                    <ion-icon name="wallet"></ion-icon> Portfolio
+                </div>
+                <div class="panel-content">
+                    <div class="portfolio-list" id="portfolio-container">
+                        <div style="text-align: center; color: var(--text-muted); padding: 1rem;">
+                            Login to view assets
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-header" style="border-top: 1px solid var(--card-border);">
+                    <ion-icon name="list"></ion-icon> Open Orders
+                </div>
+                <div class="panel-content" style="flex: 0 0 200px;">
+                    <div class="portfolio-list" id="orders-container">
+                        <!-- Orders injected here -->
+                    </div>
                 </div>
             </section>
         </main>
