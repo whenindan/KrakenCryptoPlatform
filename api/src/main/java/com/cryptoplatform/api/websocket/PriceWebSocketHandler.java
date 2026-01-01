@@ -109,7 +109,8 @@ public class PriceWebSocketHandler extends TextWebSocketHandler {
                         "last", currentTicker.last(),
                         "bid", currentTicker.bid(),
                         "ask", currentTicker.ask(),
-                        "ts", currentTicker.tsEpochMs()
+                        "ts", currentTicker.tsEpochMs(),
+                        "change24h", currentTicker.change24h()
                     );
                     
                     session.sendMessage(new TextMessage(objectMapper.writeValueAsString(msg)));

@@ -14,7 +14,12 @@ import java.util.stream.Collectors;
 public class MarketService {
 
     // Hardcoded allowed symbols as per requirements
-    private static final List<String> SUPPORTED_SYMBOLS = List.of("BTC-USD", "ETH-USD");
+    private static final List<String> SUPPORTED_SYMBOLS = List.of(
+        "BTC-USD", "ETH-USD", 
+        "XRP-USD", "SOL-USD", 
+        "USDT-USD", "BNB-USD", 
+        "USDC-USD"
+    );
     
     private final StringRedisTemplate redisTemplate;
 

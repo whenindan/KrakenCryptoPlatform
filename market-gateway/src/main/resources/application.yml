@@ -21,3 +21,8 @@ kraken:
     symbols: 
       - "BTC/USD"
       - "ETH/USD"
+      - "XRP/USD"
+      - "SOL/USD"
+      - "USDT/USD"
+      - "BNB/USD"
+      - "USDC/USD"
