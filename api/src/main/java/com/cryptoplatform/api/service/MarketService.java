@@ -65,4 +65,12 @@ public class MarketService {
             new BigDecimal((String) hash.getOrDefault("change24h", "0"))
         );
     }
+
+    public BigDecimal getCurrentPrice(String symbol) {
+        Optional<Ticker> ticker = getLatestPrice(symbol);
+        if (ticker.isEmpty()) {
+            throw new RuntimeException("Price data unavailable for " + symbol);
+        }
+        return ticker.get().last();
+    }
 }

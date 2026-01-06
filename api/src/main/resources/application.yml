@@ -31,3 +31,16 @@ logging:
   level:
     root: INFO
     com.cryptoplatform: DEBUG
+
+# AI Agent Configuration
+ai:
+  api:
+    key: ${AI_API_KEY}
+    url: ${AI_API_URL:https://api.openai.com/v1/chat/completions}
+
+# Kraken API Configuration (for real trading)
+kraken:
+  api:
+    key: ${KRAKEN_API_KEY:}
+    secret: ${KRAKEN_API_SECRET:}
+    url: https://api.kraken.com

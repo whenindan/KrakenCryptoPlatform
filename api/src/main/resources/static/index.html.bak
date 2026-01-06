@@ -149,7 +149,7 @@
                 </div>
             </div>
             <div class="ai-chat-input">
-                <textarea id="ai-input" rows="1" placeholder="Type your command... (e.g., buy $50 of BTC)"disabled></textarea>
+                <textarea id="ai-input" rows="1" placeholder="Type your command... (e.g., buy $50 of BTC)" disabled>
                 <button id="ai-send-btn" class="ai-send-btn" disabled>
                     <ion-icon name="send"></ion-icon>
                 </button>

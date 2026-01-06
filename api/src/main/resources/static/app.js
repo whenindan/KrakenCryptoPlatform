@@ -7,7 +7,10 @@ const CONFIG = {
         login: '/auth/login',
         balance: '/account/balance',
         orders: '/trade/orders',
-        portfolio: '/trade/portfolio'
+        portfolio: '/trade/portfolio',
+        aiCommand: '/ai/command',
+        aiRules: '/ai/rules',
+        aiConfirm: '/ai/confirm/{id}'
     }
 };
 
@@ -56,7 +59,16 @@ class CryptoApp {
             balanceSpan: document.getElementById('balance'),
 
             // Status
-            connectionIcon: document.getElementById('connection-icon')
+            connectionIcon: document.getElementById('connection-icon'),
+
+            // AI Chatbox
+            aiChatbox: document.getElementById('ai-chatbox'),
+            aiToggleBtn: document.getElementById('ai-toggle-btn'),
+            aiCloseBtn: document.getElementById('ai-close-btn'),
+            aiMessages: document.getElementById('ai-messages'),
+            aiInput: document.getElementById('ai-input'),
+            aiSendBtn: document.getElementById('ai-send-btn'),
+            aiLoginPrompt: document.getElementById('ai-login-prompt')
         };
 
         this.init();
@@ -90,6 +102,30 @@ class CryptoApp {
         this.dom.typeLimit.addEventListener('click', () => this.setOrderType('LIMIT'));
 
         this.dom.placeOrderBtn.addEventListener('click', () => this.placeOrder());
+
+        // AI Chatbox
+        this.dom.aiToggleBtn.addEventListener('click', () => this.toggleAiChat());
+        this.dom.aiCloseBtn.addEventListener('click', () => this.closeAiChat());
+        this.dom.aiSendBtn.addEventListener('click', () => this.sendAiMessage());
+        this.dom.aiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (e.shiftKey) {
+                    // SHIFT+ENTER: allow newline (default behavior)
+                    return;
+                } else {
+                    // ENTER alone: send message
+                    if (!this.dom.aiInput.disabled) {
+                        e.preventDefault(); // Prevent newline
+                        this.sendAiMessage();
+                    }
+                }
+            }
+        });
+        // Auto-resize textarea as user types
+        this.dom.aiInput.addEventListener('input', () => {
+            this.dom.aiInput.style.height = 'auto';
+            this.dom.aiInput.style.height = Math.min(this.dom.aiInput.scrollHeight, 120) + 'px';
+        });
     }
 
     // --- Auth Logic ---
@@ -99,10 +135,18 @@ class CryptoApp {
             this.dom.authSection.style.display = 'none';
             this.dom.userSection.style.display = 'flex';
             this.fetchAccountData();
+            // Enable AI chat
+            this.dom.aiInput.disabled = false;
+            this.dom.aiSendBtn.disabled = false;
+            this.dom.aiLoginPrompt.classList.add('hidden');
         } else {
             this.dom.authSection.style.display = 'block';
             this.dom.userSection.style.display = 'none';
             this.dom.portfolioContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 1rem;">Login to view assets</div>';
+            // Disable AI chat
+            this.dom.aiInput.disabled = true;
+            this.dom.aiSendBtn.disabled = true;
+            this.dom.aiLoginPrompt.classList.remove('hidden');
         }
     }
 
@@ -412,6 +456,241 @@ class CryptoApp {
             currency: 'USD',
             minimumFractionDigits: 2
         }).format(price);
+    }
+
+    // --- AI Chatbox Methods ---
+
+    toggleAiChat() {
+        this.dom.aiChatbox.classList.toggle('open');
+    }
+
+    closeAiChat() {
+        this.dom.aiChatbox.classList.remove('open');
+    }
+
+    addAiMessage(text, isUser = false, isSuccess = false, isError = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `ai-message ${isUser ? 'user' : 'bot'}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = 'ai-avatar';
+        avatar.textContent = isUser ? '👤' : '🤖';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'ai-bubble';
+
+        const p = document.createElement('p');
+        p.textContent = text;
+        bubble.appendChild(p);
+
+        if (isSuccess) {
+            const tag = document.createElement('div');
+            tag.className = 'success-tag';
+            tag.innerHTML = '<ion-icon name="checkmark-circle"></ion-icon> Success';
+            bubble.appendChild(tag);
+        }
+
+        if (isError) {
+            const tag = document.createElement('div');
+            tag.className = 'error-tag';
+            tag.innerHTML = '<ion-icon name="alert-circle"></ion-icon> Error';
+            bubble.appendChild(tag);
+        }
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+
+        this.dom.aiMessages.appendChild(messageDiv);
+        this.dom.aiMessages.scrollTop = this.dom.aiMessages.scrollHeight;
+    }
+
+    showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'ai-message bot';
+        typingDiv.id = 'ai-typing';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'ai-avatar';
+        avatar.textContent = '🤖';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'ai-bubble';
+        bubble.innerHTML = '<div class="ai-typing"><div class="ai-typing-dot"></div><div class="ai-typing-dot"></div><div class="ai-typing-dot"></div></div>';
+
+        typingDiv.appendChild(avatar);
+        typingDiv.appendChild(bubble);
+
+        this.dom.aiMessages.appendChild(typingDiv);
+        this.dom.aiMessages.scrollTop = this.dom.aiMessages.scrollHeight;
+    }
+
+    removeTypingIndicator() {
+        const typingIndicator = document.getElementById('ai-typing');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+
+    async sendAiMessage() {
+        const message = this.dom.aiInput.value.trim();
+        if (!message || !this.token) return;
+
+        // Add user message
+        this.addAiMessage(message, true);
+        this.dom.aiInput.value = '';
+        this.dom.aiInput.style.height = 'auto'; // Reset height after sending
+
+        // Show typing indicator
+        this.showTypingIndicator();
+
+        try {
+            const res = await fetch(CONFIG.endpoints.aiCommand, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + this.token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: message })
+            });
+
+            this.removeTypingIndicator();
+
+            if (res.ok) {
+                const data = await res.json();
+                console.log('AI Response:', data); // Debug logging
+
+                if (data.success) {
+                    // Check if response requires confirmation
+                    if (data.requiresConfirmation) {
+                        const confirmMsg = data.message || data.confirmationMessage;
+                        if (confirmMsg && data.confirmationId) {
+                            this.addAiConfirmationMessage(confirmMsg, data.confirmationId);
+                        } else {
+                            console.error('Missing confirmation data:', data);
+                            this.addAiMessage('I understood your command, but there was an issue displaying the confirmation. Please try again.', false, false, true);
+                        }
+                    } else {
+                        // Regular success message (no confirmation needed)
+                        this.addAiMessage(data.message, false, true);
+                        // Refresh account data to show updated balance/orders
+                        this.fetchAccountData();
+                        // Log to terminal
+                        this.log('AI Agent', data.message);
+                    }
+                } else {
+                    // Only show error box when success is explicitly false
+                    this.addAiMessage(data.message || 'Command failed', false, false, true);
+                }
+            } else {
+                const errorText = await res.text();
+                this.addAiMessage('Failed to process command: ' + errorText, false, false, true);
+            }
+        } catch (e) {
+            this.removeTypingIndicator();
+            this.addAiMessage('Error communicating with AI agent', false, false, true);
+            console.error(e);
+        }
+    }
+
+    addAiConfirmationMessage(message, confirmationId) {
+        try {
+            if (!message || !confirmationId) {
+                console.error('Invalid confirmation data - message:', message, 'id:', confirmationId);
+                this.addAiMessage('I understood your command, but could not create the confirmation. Please try again.', false, false, true);
+                return;
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('ai-message', 'bot');
+
+            const avatar = document.createElement('div');
+            avatar.classList.add('ai-avatar');
+            avatar.textContent = '🤖';
+
+            const bubble = document.createElement('div');
+            bubble.classList.add('ai-bubble');
+
+            const text = document.createElement('p');
+            text.textContent = message;
+            bubble.appendChild(text);
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.cssText = 'display: flex; gap: 0.5rem; margin-top: 0.75rem;';
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.textContent = 'Confirm';
+            confirmBtn.style.cssText = 'flex: 1; padding: 0.5rem 1rem; background: linear-gradient(135deg, var(--success-color), #059669); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.2s;';
+            confirmBtn.addEventListener('mouseenter', () => confirmBtn.style.transform = 'translateY(-2px)');
+            confirmBtn.addEventListener('mouseleave', () => confirmBtn.style.transform = 'translateY(0)');
+            confirmBtn.addEventListener('click', () => this.handleConfirmation(confirmationId, true, messageDiv));
+
+            const declineBtn = document.createElement('button');
+            declineBtn.textContent = 'Decline';
+            declineBtn.style.cssText = 'flex: 1; padding: 0.5rem 1rem; background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); border: 1px solid var(--card-border); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;';
+            declineBtn.addEventListener('mouseenter', () => {
+                declineBtn.style.background = 'rgba(255, 255, 255, 0.15)';
+                declineBtn.style.color = 'var(--text-primary)';
+            });
+            declineBtn.addEventListener('mouseleave', () => {
+                declineBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+                declineBtn.style.color = 'var(--text-secondary)';
+            });
+            declineBtn.addEventListener('click', () => this.handleConfirmation(confirmationId, false, messageDiv));
+
+            buttonContainer.appendChild(confirmBtn);
+            buttonContainer.appendChild(declineBtn);
+            bubble.appendChild(buttonContainer);
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(bubble);
+
+            this.dom.aiMessages.appendChild(messageDiv);
+            this.dom.aiMessages.scrollTop = this.dom.aiMessages.scrollHeight;
+        } catch (error) {
+            console.error('Error creating confirmation message:', error);
+            this.addAiMessage('Sorry, there was an error displaying the confirmation. Please try your command again.', false, false, true);
+        }
+    }
+
+    async handleConfirmation(confirmationId, confirmed, messageDiv) {
+        try {
+            // Disable buttons
+            const buttons = messageDiv.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (confirmed) {
+                this.showTypingIndicator();
+
+                const res = await fetch(CONFIG.endpoints.aiConfirm.replace('{id}', confirmationId), {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + this.token }
+                });
+
+                this.removeTypingIndicator();
+
+                if (res.ok) {
+                    const data = await res.json();
+                    this.addAiMessage(data.message, false, data.success);
+
+                    // Refresh account data
+                    this.fetchAccountData();
+                    this.log('AI Agent', data.message);
+                } else {
+                    this.addAiMessage('Failed to execute command', false, false, true);
+                }
+            } else {
+                // Cancel confirmation
+                await fetch(CONFIG.endpoints.aiConfirm.replace('{id}', confirmationId), {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + this.token }
+                });
+
+                this.addAiMessage('Command canceled. Feel free to try again with a different request!', false);
+            }
+        } catch (e) {
+            console.error(e);
+            this.addAiMessage('Error processing confirmation', false, false, true);
+        }
     }
 }
 

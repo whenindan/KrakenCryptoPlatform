@@ -11,6 +11,8 @@ services:
       - DB_PASS=crypto_pass
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - AI_API_KEY=${AI_API_KEY}
+      - AI_API_URL=${AI_API_URL:-https://api.openai.com/v1/chat/completions}
     depends_on:
       - postgres
       - redis

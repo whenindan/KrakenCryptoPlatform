@@ -8,6 +8,11 @@ import java.util.List;
 @Table(name = "users")
 public class User {
 
+    public enum TradingMode {
+        PAPER,  // Simulated trading (default)
+        LIVE    // Real Kraken API trading
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,6 +22,10 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "trading_mode")
+    private TradingMode tradingMode = TradingMode.PAPER; // Default to paper trading for safety
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Account account;
@@ -44,4 +53,7 @@ public class User {
             account.setUser(this);
         }
     }
+    
+    public TradingMode getTradingMode() { return tradingMode; }
+    public void setTradingMode(TradingMode tradingMode) { this.tradingMode = tradingMode; }
 }
