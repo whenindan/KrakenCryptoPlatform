@@ -211,7 +211,7 @@ class CryptoApp {
         if (!this.token) return;
         const headers = { 'Authorization': 'Bearer ' + this.token };
 
-        // Balance
+        // Balance - fetch from appropriate source based on mode
         try {
             const bRes = await fetch(CONFIG.endpoints.balance, { headers });
             if (bRes.ok) {
@@ -320,27 +320,27 @@ class CryptoApp {
     }
 
     showLiveModeWarning(show) {
-        let banner = document.getElementById('live-mode-banner');
+        // Remove old banner if it exists
+        let oldBanner = document.getElementById('live-mode-banner');
+        if (oldBanner) {
+            oldBanner.remove();
+        }
 
-        if (show && !banner) {
-            // Create warning banner
-            banner = document.createElement('div');
-            banner.id = 'live-mode-banner';
-            banner.className = 'live-mode-warning';
-            banner.innerHTML = `
-                <ion-icon name="warning"></ion-icon>
-                <div class="live-mode-warning-text">
-                    <strong>⚠️ LIVE TRADING MODE ACTIVE</strong><br>
-                    All trades execute with real money on Kraken
-                </div>
-            `;
-
-            // Insert at top of main content
-            const main = document.querySelector('main');
-            main.insertBefore(banner, main.firstChild);
-        } else if (!show && banner) {
-            // Remove banner
-            banner.remove();
+        if (show) {
+            // Add compact warning to header
+            const header = document.querySelector('header');
+            if (!document.getElementById('live-mode-indicator')) {
+                const indicator = document.createElement('div');
+                indicator.id = 'live-mode-indicator';
+                indicator.style.cssText = 'position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ef4444, #dc2626); padding: 0.5rem 1.5rem; border-radius: 20px; font-size: 0.875rem; font-weight: 600; color: white; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); z-index: 1000;';
+                indicator.innerHTML = '⚠️ LIVE TRADING ACTIVE';
+                header.appendChild(indicator);
+            }
+        } else {
+            const indicator = document.getElementById('live-mode-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
         }
     }
 

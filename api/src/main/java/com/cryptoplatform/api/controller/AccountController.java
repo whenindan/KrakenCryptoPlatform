@@ -37,8 +37,27 @@ public class AccountController {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        BigDecimal balance;
+        
+        // If in LIVE mode, fetch balance from Kraken
+        if (user.getTradingMode() == User.TradingMode.LIVE) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode krakenBalance = krakenApiService.getBalance();
+                // Get USD balance from Kraken (ZUSD)
+                balance = krakenBalance.has("ZUSD") ? 
+                    new BigDecimal(krakenBalance.get("ZUSD").asText()) : 
+                    BigDecimal.ZERO;
+            } catch (Exception e) {
+                // Fallback to paper balance if Kraken fetch fails
+                balance = user.getAccount().getBalance();
+            }
+        } else {
+            // PAPER mode - use paper trading balance
+            balance = user.getAccount().getBalance();
+        }
 
-        return ResponseEntity.ok(Collections.singletonMap("balance", user.getAccount().getBalance()));
+        return ResponseEntity.ok(Collections.singletonMap("balance", balance));
     }
     
     @GetMapping("/trading-mode")
