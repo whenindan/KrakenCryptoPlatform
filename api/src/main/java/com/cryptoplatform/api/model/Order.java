@@ -47,6 +47,9 @@ public class Order {
 
     @Column(nullable = false)
     private BigDecimal fee;
+    
+    @Column(name = "kraken_txid")
+    private String krakenTxid;  // For tracking Kraken transactions in live mode
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
@@ -95,6 +98,9 @@ public class Order {
 
     public BigDecimal getFee() { return fee; }
     public void setFee(BigDecimal fee) { this.fee = fee; }
+    
+    public String getKrakenTxid() { return krakenTxid; }
+    public void setKrakenTxid(String krakenTxid) { this.krakenTxid = krakenTxid; }
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }

@@ -3,7 +3,7 @@ package com.cryptoplatform.api.service;
 import com.cryptoplatform.api.model.Order;
 import com.cryptoplatform.api.model.Position;
 import com.cryptoplatform.api.model.Ticker;
-import com.cryptoplatform.api.model.TradeRequest;
+import com.cryptoplatform.api.service.TradeRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,13 +31,13 @@ public class AiService {
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
     private final String openAiApiKey;
-    private final TradingService tradingService;
+    private final TradingServiceRouter tradingService;
     private final MarketService marketService;
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
 
-    public AiService(@Value("${OPENAI_API_KEY}") String openAiApiKey,
-                     TradingService tradingService,
+    public AiService(@Value("${ai.api.key}") String openAiApiKey,
+                     TradingServiceRouter tradingService,
                      MarketService marketService,
                      ObjectMapper objectMapper) {
         this.openAiApiKey = openAiApiKey;

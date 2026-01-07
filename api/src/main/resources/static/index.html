@@ -35,7 +35,19 @@
                     <button id="signup-btn" class="btn secondary">Sign Up</button>
                 </div>
 
-                <div id="user-section" style="display: none; display: flex; align-items: center;">
+                <div id="user-section" style="display: none; display: flex; align-items: center; gap: 1rem;">
+                    <!-- Trading Mode Toggle -->
+                    <div class="trading-mode-toggle" id="trading-mode-toggle"
+                        style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.875rem; color: var(--text-secondary);">Mode:</span>
+                        <button id="mode-paper" class="mode-btn active" data-mode="PAPER">
+                            📝 Paper
+                        </button>
+                        <button id="mode-live" class="mode-btn" data-mode="LIVE">
+                            💰 Live
+                        </button>
+                    </div>
+
                     <span class="balance-display">$<span id="balance">0.00</span></span>
                     <button id="logout-btn" class="btn secondary">Log Out</button>
                 </div>
@@ -149,7 +161,8 @@
                 </div>
             </div>
             <div class="ai-chat-input">
-                <textarea id="ai-input" rows="1" placeholder="Type your command... (e.g., buy $50 of BTC)"disabled></textarea>
+                <textarea id="ai-input" rows="1" placeholder="Type your command... (e.g., buy $50 of BTC)"
+                    disabled></textarea>
                 <button id="ai-send-btn" class="ai-send-btn" disabled>
                     <ion-icon name="send"></ion-icon>
                 </button>

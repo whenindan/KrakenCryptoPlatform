@@ -21,7 +21,7 @@ import java.util.List;
 public class AiAgentService {
 
     private final OpenAiClient openAiClient;
-    private final TradingService tradingService;
+    private final TradingServiceRouter tradingService;
     private final MarketService marketService;
     private final AgentRuleRepository ruleRepository;
     private final UserRepository userRepository;
@@ -29,7 +29,7 @@ public class AiAgentService {
     // In-memory cache for pending confirmations (in production, use Redis)
     private final java.util.Map<String, PendingCommand> pendingCommands = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public AiAgentService(OpenAiClient openAiClient, TradingService tradingService,
+    public AiAgentService(OpenAiClient openAiClient, TradingServiceRouter tradingService,
                           MarketService marketService, AgentRuleRepository ruleRepository,
                           UserRepository userRepository) {
         this.openAiClient = openAiClient;

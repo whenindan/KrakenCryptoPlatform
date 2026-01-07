@@ -5,7 +5,7 @@ import com.cryptoplatform.api.model.Position;
 import com.cryptoplatform.api.model.User;
 import com.cryptoplatform.api.repository.UserRepository;
 import com.cryptoplatform.api.service.TradeRequest;
-import com.cryptoplatform.api.service.TradingService;
+import com.cryptoplatform.api.service.TradingServiceRouter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,10 +17,10 @@ import java.util.List;
 @RequestMapping("/trade")
 public class TradeController {
 
-    private final TradingService tradingService;
+    private final TradingServiceRouter tradingService;
     private final UserRepository userRepository;
 
-    public TradeController(TradingService tradingService, UserRepository userRepository) {
+    public TradeController(TradingServiceRouter tradingService, UserRepository userRepository) {
         this.tradingService = tradingService;
         this.userRepository = userRepository;
     }

@@ -1,7 +1,7 @@
 package com.cryptoplatform.api.redis;
 
 import com.cryptoplatform.api.model.Ticker;
-import com.cryptoplatform.api.service.TradingService;
+import com.cryptoplatform.api.service.PaperTradingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -15,9 +15,9 @@ import java.util.Map;
 public class TradeEngineListener implements StreamListener<String, MapRecord<String, String, String>> {
 
     private static final Logger logger = LoggerFactory.getLogger(TradeEngineListener.class);
-    private final TradingService tradingService;
+    private final PaperTradingService tradingService;
 
-    public TradeEngineListener(TradingService tradingService) {
+    public TradeEngineListener(PaperTradingService tradingService) {
         this.tradingService = tradingService;
     }
 

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class TradingService {
+public class PaperTradingService implements TradingServiceInterface {
 
     private final OrderRepository orderRepository;
     private final PositionRepository positionRepository;
@@ -22,7 +22,7 @@ public class TradingService {
 
     private static final BigDecimal FEE_RATE = new BigDecimal("0.002"); // 0.2%
 
-    public TradingService(OrderRepository orderRepository, PositionRepository positionRepository,
+    public PaperTradingService(OrderRepository orderRepository, PositionRepository positionRepository,
                           UserRepository userRepository, AccountRepository accountRepository, 
                           StringRedisTemplate redisTemplate) {
         this.orderRepository = orderRepository;
@@ -250,5 +250,48 @@ public class TradingService {
     public List<Position> getPortfolio(Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
         return positionRepository.findByAccountId(user.getAccount().getId());
+    }
+    
+    @Override
+    public List<Order> getOpenOrders(Long userId) {
+        return orderRepository.findByUserIdAndStatus(userId, Order.Status.OPEN);
+    }
+    
+    @Override
+    public void cancelOrder(Long userId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+        
+        if (order.getStatus() != Order.Status.OPEN) {
+            throw new RuntimeException("Cannot cancel order that is not OPEN");
+        }
+        
+        // Refund locked funds/assets
+        Account account = order.getUser().getAccount();
+        if (order.getSide() == Order.Side.BUY) {
+            // Refund USD
+            BigDecimal refund = order.getLimitPrice().multiply(order.getQuantity());
+            account.setBalance(account.getBalance().add(refund));
+        } else {
+            // Refund crypto
+            Position position = positionRepository.findByAccountIdAndSymbol(account.getId(), order.getSymbol())
+                    .orElse(new Position(account, order.getSymbol(), BigDecimal.ZERO));
+            position.setQuantity(position.getQuantity().add(order.getQuantity()));
+            positionRepository.save(position);
+        }
+        accountRepository.save(account);
+        
+        order.setStatus(Order.Status.CANCELLED);
+        orderRepository.save(order);
+    }
+    
+    @Override
+    public BigDecimal getBalance(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        return user.getAccount().getBalance();
     }
 }

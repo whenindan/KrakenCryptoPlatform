@@ -10,7 +10,8 @@ const CONFIG = {
         portfolio: '/trade/portfolio',
         aiCommand: '/ai/command',
         aiRules: '/ai/rules',
-        aiConfirm: '/ai/confirm/{id}'
+        aiConfirm: '/ai/confirm/{id}',
+        tradingMode: '/account/trading-mode'
     }
 };
 
@@ -68,7 +69,11 @@ class CryptoApp {
             aiMessages: document.getElementById('ai-messages'),
             aiInput: document.getElementById('ai-input'),
             aiSendBtn: document.getElementById('ai-send-btn'),
-            aiLoginPrompt: document.getElementById('ai-login-prompt')
+            aiLoginPrompt: document.getElementById('ai-login-prompt'),
+
+            // Trading Mode
+            modePaperBtn: document.getElementById('mode-paper'),
+            modeLiveBtn: document.getElementById('mode-live')
         };
 
         this.init();
@@ -121,6 +126,10 @@ class CryptoApp {
                 }
             }
         });
+
+        // Trading Mode
+        this.dom.modePaperBtn.addEventListener('click', () => this.switchTradingMode('PAPER'));
+        this.dom.modeLiveBtn.addEventListener('click', () => this.switchTradingMode('LIVE'));
         // Auto-resize textarea as user types
         this.dom.aiInput.addEventListener('input', () => {
             this.dom.aiInput.style.height = 'auto';
@@ -223,7 +232,116 @@ class CryptoApp {
                 this.state.orders = await oRes.json();
                 this.renderOrders();
             }
+
+            // Trading Mode
+            this.fetchTradingMode();
         } catch (e) { console.error(e); }
+    }
+
+    // --- Trading Mode Management ---
+
+    async fetchTradingMode() {
+        if (!this.token) return;
+
+        try {
+            const res = await fetch(CONFIG.endpoints.tradingMode, {
+                headers: { 'Authorization': `Bearer ${this.token}` }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                this.updateTradingModeUI(data.mode, data.krakenConnected);
+                this.showLiveModeWarning(data.mode === 'LIVE');
+            }
+        } catch (e) {
+            console.error('Failed to fetch trading mode', e);
+        }
+    }
+
+    async switchTradingMode(mode) {
+        if (!this.token) return;
+
+        // Safety confirmation for switching to LIVE
+        if (mode === 'LIVE') {
+            const confirmed = confirm(
+                '⚠️ WARNING: LIVE TRADING MODE\n\n' +
+                'You are about to switch to LIVE trading mode.\n' +
+                'ALL trades will execute with REAL MONEY on Kraken!\n\n' +
+                'Are you absolutely sure you want to continue?'
+            );
+
+            if (!confirmed) {
+                return;
+            }
+        }
+
+        try {
+            const res = await fetch(CONFIG.endpoints.tradingMode, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ mode })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.mode === mode) {
+                this.updateTradingModeUI(data.mode, data.krakenConnected);
+                this.showLiveModeWarning(data.mode === 'LIVE');
+                this.log('Trading Mode', data.message);
+            } else {
+                alert('Failed to switch mode: ' + data.message);
+            }
+        } catch (e) {
+            console.error('Failed to switch trading mode', e);
+            alert('Error switching trading mode. Please try again.');
+        }
+    }
+
+    updateTradingModeUI(mode, krakenConnected) {
+        // Update button states
+        if (mode === 'PAPER') {
+            this.dom.modePaperBtn.classList.add('active');
+            this.dom.modeLiveBtn.classList.remove('active');
+        } else {
+            this.dom.modeLiveBtn.classList.add('active');
+            this.dom.modePaperBtn.classList.remove('active');
+        }
+
+        // Update button text to show connection status if LIVE
+        if (mode === 'LIVE') {
+            const icon = krakenConnected ? '💰' : '⚠️';
+            this.dom.modeLiveBtn.innerHTML = `${icon} Live`;
+        } else {
+            this.dom.modeLiveBtn.innerHTML = '💰 Live';
+        }
+    }
+
+    showLiveModeWarning(show) {
+        let banner = document.getElementById('live-mode-banner');
+
+        if (show && !banner) {
+            // Create warning banner
+            banner = document.createElement('div');
+            banner.id = 'live-mode-banner';
+            banner.className = 'live-mode-warning';
+            banner.innerHTML = `
+                <ion-icon name="warning"></ion-icon>
+                <div class="live-mode-warning-text">
+                    <strong>⚠️ LIVE TRADING MODE ACTIVE</strong><br>
+                    All trades execute with real money on Kraken
+                </div>
+            `;
+
+            // Insert at top of main content
+            const main = document.querySelector('main');
+            main.insertBefore(banner, main.firstChild);
+        } else if (!show && banner) {
+            // Remove banner
+            banner.remove();
+        }
     }
 
     // --- Trading Logic ---

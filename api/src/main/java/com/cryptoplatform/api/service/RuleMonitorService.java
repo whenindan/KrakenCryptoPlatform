@@ -22,11 +22,11 @@ public class RuleMonitorService {
 
     private final AgentRuleRepository ruleRepository;
     private final MarketService marketService;
-    private final TradingService tradingService;
+    private final TradingServiceRouter tradingService;
 
     public RuleMonitorService(AgentRuleRepository ruleRepository, 
                              MarketService marketService,
-                             TradingService tradingService) {
+                             TradingServiceRouter tradingService) {
         this.ruleRepository = ruleRepository;
         this.marketService = marketService;
         this.tradingService = tradingService;
